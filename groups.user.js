@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Old Roblox Groups Enhancements
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.51
 // @description  Various enhancements for Roblox groups page: search controls, text changes, report abuse button, member count display, scroll buttons, and right column with controls.
 // @author       name
 // @match        https://www.roblox.com/communities/*
