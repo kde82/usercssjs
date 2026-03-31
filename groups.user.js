@@ -26,51 +26,53 @@
 
     // Section 1: Insert custom search controls
     const searchControlsHTML = `
-        <div id="SearchControls">
+        <div id="SearchControls" style="margin-bottom: 20px;">
             <form action="https://www.roblox.com/search/communities" method="GET">
                 <div class="Searchcontent">
-                    <input
-                        name="keyword"
-                        type="text"
-                        id="searchKeyword"
-                        maxlength="100"
-                        placeholder="Search all groups"
-                        class="SearchKeyword"
-                    />
+                    <input name="keyword" type="text" id="searchKeyword" maxlength="100" placeholder="Search all groups" class="SearchKeyword" />
                     <input type="submit" id="searchButton" value="Search" class="search-button" />
                 </div>
             </form>
         </div>
     `;
 
-    function insertSearchControls() {
-        const targetElement = document.querySelector('.light-theme .group-profile-header');
-        if (targetElement && !document.getElementById('SearchControls')) {
-            targetElement.insertAdjacentHTML('beforebegin', searchControlsHTML);
-            addSearchButtonEvent();
-        }
-    }
-
     function addSearchButtonEvent() {
         const searchButton = document.getElementById('searchButton');
         const searchInput = document.getElementById('searchKeyword');
-        searchButton.addEventListener('click', function(event) {
-            const searchValue = searchInput.value.trim();
-            if (searchValue === '' || searchValue === 'Search all groups') {
-                event.preventDefault(); // Prevent submission if empty or placeholder-like
+        if (searchButton && searchInput) {
+            searchButton.addEventListener('click', function(event) {
+                const searchValue = searchInput.value.trim();
+                if (searchValue === '' || searchValue === 'Search all groups') {
+                    event.preventDefault();
+                }
+            });
+        }
+    }
+
+    function insertSearchControls() {
+        const targets = document.querySelectorAll('.group-profile-header');
+
+        targets.forEach((target) => {
+            const parent = target.parentElement;
+            if (parent && !parent.querySelector('#SearchControls')) {
+                target.insertAdjacentHTML('beforebegin', searchControlsHTML);
+                addSearchButtonEvent();
             }
         });
     }
 
-    window.addEventListener('load', insertSearchControls);
-
-    const searchObserver = new MutationObserver((mutations, observer) => {
-        insertSearchControls();
-        if (document.getElementById('SearchControls')) {
-            observer.disconnect();
-        }
+    let searchTimeout;
+    const searchObserver = new MutationObserver(() => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(insertSearchControls, 300);
     });
-    searchObserver.observe(document.body, { childList: true, subtree: true });
+
+    searchObserver.observe(document.body, {
+        childList: true,
+        subtree: true
+    });
+
+    insertSearchControls();
 
     // Section 2: Change specific texts
 function changeTexts() {
