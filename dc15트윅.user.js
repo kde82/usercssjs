@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         DC 15 트윅
 // @namespace    http://tampermonkey.net/
-// @version      1.4
+// @version      1.5
 // @description  트윅
 // @match        *://*.dcinside.com/*
 // @grant        none
@@ -10,12 +10,29 @@
 // @updateURL    https://raw.githubusercontent.com/dmk1005/dcjs/refs/heads/main/dc15%ED%8A%B8%EC%9C%85.user.js
 // ==/UserScript==
 
-var create_fav_link = document.createElement('link');
-create_fav_link.setAttribute('rel', 'shortcut icon');
-create_fav_link.setAttribute('href', "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAABqElEQVQ4jZWTv2pUURDGfzPn3Gtc3BgEW2FZhDWVkMbGZxB7n8AXyDP4ApZW6SzEwsoyjU1EEUM0LIKYSpAoS5K795wZi7Mbd282qB8MMzBnvvl7BODl7rEzg1sxnaIFKVqFLh7c3xBZDDYz3BxzPycSFVSkaNULJNHNcRzLRkoZy0Y2w8wAUFWCKhoUVUVVkBmhIMRsVoLbxHTaktrEvbs32BxeB2B//JM3734QYiBWkRgjqqAhoKrEnBJtm2nOGs5OG6bTxOZwgEjp2d15vfuNuo7UVyqquiKEQF2DALLz6si37vQZDfpLvS0SrMLh1xPeH56gzWnDaNAvfS1Il6wrt2/1yNmIbZuXHs8zdkm61Xz6MilbyB2Cv+HJ0z3Wemusr/e52qu5uNh/gFjEPWNZiP8bvP14C4CD8YS9/QmqUi2zrxhi1ycijIbXMINYVRUfP/+6dF1vP3xf6TsYlyHKs+dHnlMipXKJUKbt7uVQVIstQgiBEJQYIyFGQghEJSBBEZSgkXmyedAizj+VKIoiLkhK2XdezMr0P9/4MggCUubx6OFNfgPmn7765GE2UgAAAABJRU5ErkJggg==");
+(function() {
+    function setFavicon() {
+        var head = document.getElementsByTagName('head')[0] || document.documentElement;
 
-var head = document.getElementsByTagName('head')[0];
-head.appendChild(create_fav_link);
+        var existingFavicons = head.querySelectorAll("link[rel*='icon']");
+        existingFavicons.forEach(function(el) {
+            el.parentNode.removeChild(el);
+        });
+
+        var create_fav_link = document.createElement('link');
+        create_fav_link.setAttribute('rel', 'shortcut icon');
+        create_fav_link.setAttribute('type', 'image/png');
+        create_fav_link.setAttribute('href', "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAACXBIWXMAAAsSAAALEgHS3X78AAABqElEQVQ4jZWTv2pUURDGfzPn3Gtc3BgEW2FZhDWVkMbGZxB7n8AXyDP4ApZW6SzEwsoyjU1EEUM0LIKYSpAoS5K795wZi7Mbd282qB8MMzBnvvl7BODl7rEzg1sxnaIFKVqFLh7c3xBZDDYz3BxzPycSFVSkaNULJNHNcRzLRkoZy0Y2w8wAUFWCKhoUVUVVkBmhIMRsVoLbxHTaktrEvbs32BxeB2B//JM3734QYiBWkRgjqqAhoKrEnBJtm2nOGs5OG6bTxOZwgEjp2d15vfuNuo7UVyqquiKEQF2DALLz6si37vQZDfpLvS0SrMLh1xPeH56gzWnDaNAvfS1Il6wrt2/1yNmIbZuXHs8zdkm61Xz6MilbyB2Cv+HJ0z3Wemusr/e52qu5uNh/gFjEPWNZiP8bvP14C4CD8YS9/QmqUi2zrxhi1ycijIbXMINYVRUfP/+6dF1vP3xf6TsYlyHKs+dHnlMipXKJUKbt7uVQVIstQgiBEJQYIyFGQghEJSBBEZSgkXmyedAizj+VKIoiLkhK2XdezMr0P9/4MggCUubx6OFNfgPmn7765GE2UgAAAABJRU5ErkJggg==");
+
+        head.appendChild(create_fav_link);
+    }
+
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        setFavicon();
+    } else {
+        document.addEventListener('DOMContentLoaded', setFavicon);
+    }
+})();
 
 (function () {
     const h2 = document.querySelector('.page_head h2');
@@ -173,10 +190,10 @@ updateBg();
 
     }
 
-    // 2. board/view, write, modify 페이지
     if (location.href.includes('/board/view') ||
         location.href.includes('/board/write') ||
-        location.href.includes('/board/modify')) {
+        location.href.includes('/board/modify') ||
+        location.href.includes('/board/delete')) {
 
         const leftContent = document.querySelector('.issue_wrap');
         if (leftContent) leftContent.appendChild(visitBox);
@@ -353,7 +370,7 @@ updateBg();
     };
 
     const snsUrl = getCleanSnsUrl();
-    const postTitle = document.title.split(' - ')[0]; // "제목 - 갤러리이름"에서 제목만 추출
+    const postTitle = document.title.split(' - ')[0];
 
     if (!document.querySelector('.btn_silbechu')) {
         const hitBtn = document.getElementById('li_old_hit');
@@ -407,19 +424,16 @@ updateBg();
 (function() {
     'use strict';
 
-    // 조건: 호스트네임이 www.dcinside.com 이고, 경로가 '/' (메인)인 경우에만 실행
     if (window.location.hostname === 'www.dcinside.com' &&
        (window.location.pathname === '/' || window.location.pathname === '/index.php')) {
 
         function getTargetDateStr() {
             const now = new Date();
-            // 2026년 기준 10년 전 계산
             let target = new Date(now.getFullYear() - 10, now.getMonth(), now.getDate());
 
             const minDate = new Date('2015-09-01T00:00:00');
             const maxDate = new Date('2018-09-30T23:59:59');
 
-            // 범위 제한 로직
             if (target < minDate) {
                 target = minDate;
             } else if (target > maxDate) {
